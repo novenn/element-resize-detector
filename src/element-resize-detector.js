@@ -229,6 +229,18 @@ module.exports = function(options) {
                 //The element is not prepared to be detectable, so do prepare it and add a listener to it.
                 elementUtils.markBusy(element, true);
                 return detectionStrategy.makeDetectable({ debug: debug, important: importantCssRules }, element, function onElementDetectable(element) {
+
+                    // If the element or its parent has already been removed and appended to the DOM again
+                    // then Object.onload is been called again, and this function will be called again
+                    // such as keep-alive in vue;
+                    // so we need to avoid calling this function again
+                    // in some scenarios: users want to removeListener before element been removed
+                    // but when the element been appended to the DOM again, if this function is called
+                    // then addListener function will be called again
+                    if(elementUtils.isDetectable(element)) {
+                        return
+                    }
+
                     debug && reporter.log(id, "onElementDetectable");
 
                     if (stateHandler.getState(element)) {
